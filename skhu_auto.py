@@ -5,6 +5,7 @@ import pyautogui
 from datetime import datetime
 import time
 import schedule
+from bs4 import BeautifulSoup
 
 def edu_auto():
     driver = webdriver.Chrome()
@@ -36,36 +37,53 @@ def edu_auto():
 
     # educate auto
     driver.get('http://lms.skhu.ac.kr/ilos/mp/course_register_list_form.acl')
-    for x in range(len(driver.find_elements_by_css_selector('.content-title'))):  # 해당주차의 1강 2강 같은거 있으면 그거 반복
+    for x in range(len(driver.find_elements_by_css_selector('.content-title'))):  # 강의 선택 ex 교양시사영어
         driver.find_elements_by_css_selector('.content-title')[educate_number].click()
         driver.find_element_by_css_selector('#week-{}'.format(week)).click()
         time.sleep(2)
 
+        # 여기에도 .view를 크롤링해서 클릭할때 여러개의 강의목록이 나올수있어서 추가요함
         driver.find_element_by_css_selector('.view').click()
         time.sleep(5)
         pyautogui.typewrite(['enter'])
-        if len(driver.find_elements_by_css_selector('.item-title-lesson.item-title-lesson-on')) > 1:
-            for x in driver.find_elements_by_css_selector('.item-title-lesson.item-title-lesson-on'):  # 교시가 있으면 그거 누름
-                x.click()
+        time.sleep(2)
+        if len(driver.find_elements_by_css_selector('.item-title-lesson')) > 1:
+            print("교시가 있습니다.")
+            class_time = driver.find_elements_by_css_selector('.item-title-lesson')
+
+            time_room=0
+            for x in range(len(class_time)):
                 while True:
                     time.sleep(1)
                     second_count += 1
                     print(second_count)
-                    if second_count == 3600:
+                    if second_count == 50:
                         break
+                second_count=0
+                time_room +=1
+                class_time[time_room].click()
+                time.sleep(5)
+                pyautogui.typewrite(['enter'])
         else:
+            print("교시가 없는 경우로 들어옵니다.")
             while True:
                 time.sleep(1)
                 second_count += 1
                 print(second_count)
-                if second_count == 3600:
+                if second_count == 50:
                     break
+            second_count=0
         driver.find_element_by_css_selector('#close_').click()
+        time.sleep(5)
+        pyautogui.typewrite(['enter'])
         driver.get('http://lms.skhu.ac.kr/ilos/mp/course_register_list_form.acl')
+        educate_number+=1
     driver.close()
 
-schedule.every().tuesday.at("22:23").do(edu_auto)
-# driver.find_element_by_css_selector
+schedule.every().wednesday.at("14:13").do(edu_auto)
+
+
+
 
 while True:
     schedule.run_pending()
